@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="notes.css" />
+    <title>Notes Application</title>
+</head>
+
+<body>
+    <div class="main">
+        <button type="button" id="showNew">New Note</button>
+        
+        <div class="newsNote" id="newsNote">
+            <h2>New Note</h2>
+            <input type="text" id="title"  placeholder="Title"></br></br>
+            <textarea type="text" id="note" class="editable-field" placeholder="Note"></textarea></br></br>
+            <button type="button" id="newNote">Save Note</button></br></br>
+        </div>
+    
+        <div class="container" id="noteContainer">
+        </div>
+
+    </div>
+    <script>
+        //New Note Field
+        const showNewButton = document.getElementById('showNew');
+        const newNoteClass = document.getElementById('newsNote');
+        showNewButton.addEventListener('click', function() {
+            if (newNoteClass.style.display === 'none') {
+                    newNoteClass.style.display = 'block';
+            } else {
+                    newNoteClass.style.display = 'none';
+            }
+        });
+        const editableFields = document.querySelectorAll('.editable-field');
+        editableFields.forEach(field => {
+            field.addEventListener('keydown', function(e) {
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                const { selectionStart, selectionEnd } = this;
+                this.value = this.value.substring(0, selectionStart) + '\t' + this.value.substring(selectionEnd);
+                this.selectionStart = this.selectionEnd = selectionStart + 1;
+            }
+            });
+        });
+
+        //SaveNote
+        function saveNote() {
+            event.preventDefault();
+            const noteText = document.getElementById('note').value;
+            const formattedText = JSON.stringify(noteText);
+            const currentDate = new Date();
+            const noteTitle = document.getElementById('title').value;
+            if (noteText == '' || noteTitle==''){return;}
+            const newNote = {
+                number: Notes.length,
+                created: currentDate,
+                lastModified: currentDate,
+                title: noteTitle,
+                text: formattedText
+            };    
+            Notes.push(newNote)
+            localStorage.setItem('notes', JSON.stringify(Notes));
+            document.getElementById('title').value = "";
+            document.getElementById('note').value = "";
+        }
+
+
+        const saveButton = document.getElementById('newNote');
+        saveButton.addEventListener('click', saveNote);
+        saveButton.addEventListener('click', loadNotes);
+
+        //Default Note
+        currentDate = new Date();
+        Notes = [{
+            "created": currentDate,
+            "lastModified": currentDate,
+            "title": "Note one",
+            "text": "Welcome to Note App"
+        },];
+        
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+
+            return `${year}-${month}-${day} at ${hours}:${minutes} hours`;
+        }
+
+        //List of Notes
+        function createTemplate1(note) {
+            const formattedNoteText = note.text.replace(/"/g, '')
+                                               .replace(/\\n/g, '<br>')
+                                               .replace(/\\t/g,'&#9;');
+            const dateCreated = formatDate(note.created);
+            const dateModified = formatDate(note.lastModified);    
+            const template = document.createElement('div');
+            template.classList.add('template1');
+            template.innerHTML = `
+                <div class="resume" data-id="${note.number}">
+                <h2>${note.title}</h2>
+                <div class="datefield"><strong>Created:</strong> ${dateCreated}</div>
+                <div class="datefield"><strong>Last Modified:</strong> ${dateModified}</div>
+                <p>${formattedNoteText}</p>
+                </div>
+            `;
+
+            return template;
+        }
+
+        //One note
+        function createTemplate2(note) {
+            if (newNoteClass.style.display === 'block') {
+                newNoteClass.style.display = 'none';}
+            const formattedNoteText = note.text.replace(/"/g, '')
+                                               .replace(/\\n/g, '<br>')
+                                               .replace(/\\t/g,'&#9;');
+            const dateCreated = formatDate(note.created);
+            const dateModified = formatDate(note.lastModified);    
+            const template = document.createElement('div');
+            template.classList.add('template2');
+            template.innerHTML = `
+                <div class="resume">
+                    <h2>${note.title}</h2>
+                    <div class="datefield"><strong>Created:</strong> ${dateCreated}</div>
+                    <div class="datefield"><strong>Last Modified:</strong> ${dateModified}</div>
+                    ${formattedNoteText}
+                    <br>    
+                    <a href="#" id="backLink">Back to List</a></br></br>
+                    <button type="button" id = "deletethisNote">Delete Note</button>
+                    <button type="button" id = "editElement">Edit Note</button>
+                </div>
+            `;
+            return template;
+        }
+
+        //Delete Note
+        function deleteNote(noteId) {
+            const index = Notes.findIndex(note => note.number === noteId);
+            if (index !== -1) {
+                Notes.splice(index, 1);
+                localStorage.setItem('notes', JSON.stringify(Notes));
+                loadNotes();
+            }
+        }
+        
+        //Navigation to single note
+        function navigateToItem(note) {
+            const noteContainer = document.getElementById('noteContainer');
+            noteContainer.innerHTML = '';
+            const template2 = createTemplate2(note);
+            noteContainer.appendChild(template2);
+            const backLink = document.getElementById('backLink');
+            backLink.addEventListener('click', function (event) {
+                event.preventDefault();
+                loadNotes();
+            });
+            const deleteButton=document.getElementById('deletethisNote');
+            deleteButton.addEventListener('click', function() {
+                deleteNote(note.number)});
+            const editButton = document.getElementById('editElement');
+            editButton.addEventListener('click', function() {
+                editNote(note);
+            });
+        }
+
+        //Edit Note
+        function editNote(note) {
+            const noteContainer = document.getElementById('noteContainer');
+            noteContainer.innerHTML = '';
+            const formattedText = note.text.replace(/"/g, '')
+                                           .replace(/\\n/g, '\n')
+                                           .replace(/\\t/g,'&#9;');
+            const editForm = document.createElement('form');
+            editForm.innerHTML = `
+                <input type="text" id="editTitle" value="${note.title}"></br></br>
+                <textarea type="text" id="editNote" class="editable-field">${formattedText}</textarea></br></br>
+                <button type="button" id="saveEdit" onclick="saveEditedNote(${note.number})">Save Changes</button>
+                <button type="button" id="back" onclick="loadNotes()">Back</button>
+
+            `;
+            noteContainer.appendChild(editForm);
+            const editableField = document.getElementById('editNote');
+            editableField.addEventListener('keydown', function(e) {
+                if (e.key === 'Tab') {
+                    e.preventDefault();
+                    const { selectionStart, selectionEnd } = this;
+                    this.value = this.value.substring(0, selectionStart) + '\t' + this.value.substring(selectionEnd);
+                    this.selectionStart = this.selectionEnd = selectionStart + 1;
+                    }
+                });
+
+            }
+
+        function saveEditedNote(noteId) {
+            const editTitle = document.getElementById('editTitle').value;
+            const editNote = document.getElementById('editNote').value;
+            const formattedText = JSON.stringify(editNote);
+            const index = Notes.findIndex(note => note.number === noteId);
+            if (index !== -1) {
+                Notes[index].title = editTitle;
+                Notes[index].text = formattedText;
+                Notes[index].lastModified = new Date();
+                localStorage.setItem('notes', JSON.stringify(Notes));
+                loadNotes();
+            }
+        }
+
+        //Template 1 click
+        function noteClick(note) {
+            return function () {
+                navigateToItem(note);
+            }
+        }
+
+        //JSON load notes
+        function loadNotes() {
+            const noteContainer = document.getElementById('noteContainer')
+            noteContainer.innerHTML = '';
+            const storedNotes = localStorage.getItem('notes');
+            if (storedNotes) {
+                Notes = JSON.parse(storedNotes);
+            }
+
+            for (const key in Notes) {
+                if (Notes.hasOwnProperty(key)) {
+                    const note = Notes[key];
+                    const template1 = createTemplate1(note);
+                    template1.addEventListener('click', noteClick(note));
+                    noteContainer.prepend(template1);
+                }
+            }
+        }
+
+        //Initialize App
+        function initializeApp() {
+            const storedNotes = localStorage.getItem('notes');
+                if (storedNotes) {
+                    Notes = JSON.parse(storedNotes);
+                } else {
+                    Notes = [{
+                        "number":0,
+                        "created": currentDate,
+                        "lastModified": currentDate,
+                        "title": "Note one",
+                        "text": "Welcome to Note App"
+                    }];
+                    localStorage.setItem('notes', JSON.stringify(Notes));
+                }
+                console.log(Notes.length);
+            loadNotes();
+        }
+
+        initializeApp()
+
+    </script>
+
+</body>
+
+</html>

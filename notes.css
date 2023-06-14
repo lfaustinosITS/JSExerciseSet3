@@ -1,0 +1,42 @@
+.main {
+    display: flex;
+    width: 100vw;
+    flex-wrap: wrap;
+}
+#showNew{
+    width: 100px;
+    height: 40px;
+}
+.newsNote{
+    position: relative;
+    width: 350px;
+    height: 400px;
+    display: none;
+    font-family: 'Courier New', Courier, monospace;
+    
+}
+#title{
+    width: 250px;
+}
+#note, #editNote{
+    width: 250px;
+    height: 250px;
+    padding: 0;
+    text-align: left;
+}
+
+.container{
+    display: flex;
+    flex-wrap: wrap;
+    font-family: 'Courier New', Courier, monospace;
+}
+.template1{
+    display:inline-block;
+    position: relative;
+    width:400px;
+    height: fit-content;
+    margin-left: 10px;
+}
+.template1 .datefield, .template2 .datefield{
+    font-size: 13px;
+}

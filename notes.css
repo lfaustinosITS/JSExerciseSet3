@@ -40,3 +40,12 @@
 .template1 .datefield, .template2 .datefield{
     font-size: 13px;
 }
+form{
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: column;
+    
+}
+button{
+    width: 100px;
+}

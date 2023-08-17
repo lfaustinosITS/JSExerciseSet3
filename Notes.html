@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <link rel="stylesheet" href="notes.css" />
+    <script type="module" src="notes.js"></script>
     <title>Notes Application</title>
 </head>
 
@@ -11,7 +12,7 @@
     <div class="main">
         <button type="button" id="showNew">New Note</button>
 
-        <div class="newsNote" id="newsNote">
+        <div class="newNote" id="newNoteInput">
             <h2>New Note</h2>
             <input type="text" id="title" placeholder="Title"></br></br>
             <textarea type="text" id="note" class="editable-field" placeholder="Note"></textarea></br></br>
@@ -20,9 +21,21 @@
 
         <div class="container" id="noteContainer">
         </div>
+        <template id="noteTemplate">
+            <article class="template1">
+                <h1 id="title"></h1>
+                <strong>Created:</strong><div class="datefield" id="created"></div>
+                <strong>Last Modified:</strong><div class="datefield" id="modified"></div>
+                <br>
+                <div style="white-space: pre; "id="content"></div>
+                <button id="backButton">Back</button>
+                <button id="deleteButton">Delete Note</button>
+                <button id="editButton">Edit Note</button>
+            </article>
+        </template>
 
     </div>
-    <script type="module"  src="notes.js"></script>
+
 
 </body>
 

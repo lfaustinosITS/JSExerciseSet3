@@ -1,6 +1,7 @@
+
 //New Note Field
 const showNewButton = document.getElementById('showNew');
-const newNoteClass = document.getElementById('newsNote');
+const newNoteClass = document.getElementById('newNoteInput');
 showNewButton.addEventListener('click', function () {
     if (newNoteClass.style.display === 'block') {
         newNoteClass.style.display = 'none';
@@ -22,11 +23,80 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 
-//SaveNote
+//List of Notes
+function createTemplate1(note) {
+
+    const dateCreated = formatDate(note.created);
+    const dateModified = formatDate(note.lastModified);
+    const template = document.querySelector('#noteTemplate');
+    const templateClone = template.content.cloneNode(true);
+    templateClone.querySelector('article').setAttribute('id', note.number);
+    const title = templateClone.querySelector('h1');
+    title.textContent = note.title;
+    const divDateCreated = templateClone.querySelector('#created');
+    divDateCreated.textContent = dateCreated;
+    const divDateModified = templateClone.querySelector('#modified');
+    divDateModified.textContent = dateModified;
+    const noteText = templateClone.querySelector('#content');
+    noteText.textContent = note.text;
+    const backButton = templateClone.querySelector('#backButton');
+    const deleteButton = templateClone.querySelector('#deleteButton');
+    const editButton = templateClone.querySelector('#editButton');
+    backButton.classList.add('hide');
+    deleteButton.classList.add('hide');
+    editButton.classList.add('hide');
+
+    return templateClone;
+}
+
+//Show one note
+function switchToOneNote(noteId) {
+    const templateDiv = document.getElementById(noteId);
+    const backButton = templateDiv.querySelector('#backButton');
+    const deleteButton = templateDiv.querySelector('#deleteButton');
+    const editButton = templateDiv.querySelector('#editButton');
+    backButton.classList.remove('hide');
+    deleteButton.classList.remove('hide');
+    editButton.classList.remove('hide');
+    backButton.addEventListener('click', event => {
+        event.preventDefault();
+        event.stopPropagation();
+        loadNotes();
+    });
+    deleteButton.addEventListener('click', event => {
+        event.preventDefault();
+        event.stopPropagation();
+        deleteNote(noteId);
+        loadNotes();
+    });
+    editButton.addEventListener('click', event => {
+        event.preventDefault();
+        event.stopPropagation();
+        editNote(noteId);
+    })
+    templateDiv.classList.remove('template1');
+    templateDiv.classList.add('template2');
+
+}
+
+function loadOneNote(noteId) {
+    const noteContainer = document.getElementById('noteContainer')
+    noteContainer.innerHTML = '';
+    const storedNotes = localStorage.getItem('notes');
+    let Notes = JSON.parse(storedNotes);
+    const noteIndex = Notes.findIndex(item => item.number === parseInt(noteId));
+    const note = Notes[noteIndex];
+    const template1 = createTemplate1(note);
+    noteContainer.prepend(template1);
+    switchToOneNote(noteId);
+}
+
+//Save Note
 function saveNote() {
     event.preventDefault();
+    const storedNotes = localStorage.getItem('notes');
+    let Notes = JSON.parse(storedNotes);
     const noteText = document.getElementById('note').value;
-    const formattedText = JSON.stringify(noteText);
     const currentDate = new Date();
     const noteTitle = document.getElementById('title').value;
     if (noteText == '' || noteTitle == '') { return; }
@@ -35,7 +105,7 @@ function saveNote() {
         created: currentDate,
         lastModified: currentDate,
         title: noteTitle,
-        text: formattedText
+        text: noteText
     };
     Notes.push(newNote)
     localStorage.setItem('notes', JSON.stringify(Notes));
@@ -48,14 +118,8 @@ const saveButton = document.getElementById('newNote');
 saveButton.addEventListener('click', saveNote);
 saveButton.addEventListener('click', loadNotes);
 
-//Default Note
+//Date format
 let currentDate = new Date();
-let Notes = [{
-    "created": currentDate,
-    "lastModified": currentDate,
-    "title": "Note one",
-    "text": "Welcome to Note App"
-},];
 
 function formatDate(dateString) {
     const date = new Date(dateString);
@@ -68,151 +132,63 @@ function formatDate(dateString) {
     return `${year}-${month}-${day} at ${hours}:${minutes} hours`;
 }
 
-//List of Notes
-function createTemplate1(note) {
-    const formattedNoteText = note.text.replace(/"/g, '')
-        .replace(/\\n/g, '<br>')
-        .replace(/\\t/g, '&#9;');
-    const dateCreated = formatDate(note.created);
-    const dateModified = formatDate(note.lastModified);
-    const template = document.createElement('div');
-        template.classList.add('template1');
-        template.setAttribute('id',note.number);
-    const title = document.createElement('h2');
-        title.textContent = note.title;
-        template.appendChild(title);
-    const createdDateField = document.createElement('div');
-        createdDateField.classList.add('datefield');
-        createdDateField.innerHTML = `<strong>Created:</strong> ${formatDate(note.created)}`;
-        template.appendChild(createdDateField);
-    const modifiedDateField = document.createElement('div');
-        modifiedDateField.classList.add('datefield');
-        modifiedDateField.innerHTML = `<strong>Last Modified:</strong> ${formatDate(note.lastModified)}`;
-        template.appendChild(modifiedDateField);
-    const noteText = document.createElement('p');
-        noteText.innerHTML = formattedNoteText;
-        template.appendChild(noteText);
 
-    return template;
-}
-
-//One note
-function createTemplate2(note) {
-    if (newNoteClass.style.display === 'block') {
-        newNoteClass.style.display = 'none';
-    }
-    const formattedNoteText = note.text.replace(/"/g, '')
-        .replace(/\\n/g, '<br>')
-        .replace(/\\t/g, '&#9;');
-    const dateCreated = formatDate(note.created);
-    const dateModified = formatDate(note.lastModified);
-    const template = document.createElement('div');
-    template.classList.add('template2');
-    const title = document.createElement('h2');
-        title.textContent = note.title;
-        template.appendChild(title);
-    const createdDateField = document.createElement('div');
-        createdDateField.classList.add('datefield');
-        createdDateField.innerHTML = `<strong>Created:</strong> ${formatDate(note.created)}`;
-        template.appendChild(createdDateField);
-    const modifiedDateField = document.createElement('div');
-        modifiedDateField.classList.add('datefield');
-        modifiedDateField.innerHTML = `<strong>Last Modified:</strong> ${formatDate(note.lastModified)}`;
-        template.appendChild(modifiedDateField);
-    const noteText = document.createElement('p');
-        noteText.innerHTML = formattedNoteText;
-        template.appendChild(noteText);
-    const backLink = document.createElement('a');
-        backLink.href = '#';
-        backLink.textContent = 'Back to List';
-        backLink.setAttribute('id','backLink');
-        template.appendChild(backLink);
-        template.appendChild(document.createElement('br'));
-        template.appendChild(document.createElement('br'));
-    const deleteButton = document.createElement('button');
-        deleteButton.type = 'button';
-        deleteButton.textContent = 'Delete Note';
-        deleteButton.id = 'deletethisNote';
-        template.appendChild(deleteButton);
-    const editButton = document.createElement('button');
-        editButton.type = 'button';
-        editButton.textContent = 'Edit Note';
-        editButton.id = 'editElement';
-        template.appendChild(editButton);
-    
-    return template;
-}
 
 //Delete Note
 function deleteNote(noteId) {
-    const index = Notes.findIndex(note => note.number === noteId);
+    const storedNotes = localStorage.getItem('notes');
+    let Notes = JSON.parse(storedNotes);
+    const index = Notes.findIndex(note => note.number === parseInt(noteId));
     if (index !== -1) {
         Notes.splice(index, 1);
         localStorage.setItem('notes', JSON.stringify(Notes));
-        loadNotes();
+
     }
+
 }
 
-//Navigation to single note
-function navigateToItem(note) {
-    const noteContainer = document.getElementById('noteContainer');
-    noteContainer.innerHTML = '';
-    const template2 = createTemplate2(note);
-    noteContainer.appendChild(template2);
-    const backLink = document.getElementById('backLink');
-    backLink.addEventListener('click', function (event) {
-        event.preventDefault();
-        loadNotes();
-    });
-    const deleteButton = document.getElementById('deletethisNote');
-    deleteButton.addEventListener('click', function () {
-        deleteNote(note.number)
-    });
-    const editButton = document.getElementById('editElement');
-    editButton.addEventListener('click', function () {
-        editNote(note);
-    });
-}
+
 
 //Edit Note
-function editNote(note) {
+function editNote(noteId) {
+    const storedNotes = localStorage.getItem('notes');
+    let Notes = JSON.parse(storedNotes);
+    const noteIndex = Notes.findIndex(item => item.number === parseInt(noteId));
+    const note = Notes[noteIndex];
     const noteContainer = document.getElementById('noteContainer');
     noteContainer.innerHTML = '';
-    const formattedText = note.text.replace(/"/g, '')
-        .replace(/\\n/g, '\n')
-        .replace(/\\t/g, '&#9;');
     const editForm = document.createElement('form');
     const editTitleInput = document.createElement('input');
-        editTitleInput.type = 'text';
-        editTitleInput.id = 'editTitle';
-        editTitleInput.value = note.title;
-        editForm.appendChild(editTitleInput);
-        editForm.appendChild(document.createElement('br'));
-        editForm.appendChild(document.createElement('br'));
+    editTitleInput.type = 'text';
+    editTitleInput.id = 'editTitle';
+    editTitleInput.value = note.title;
+    editForm.appendChild(editTitleInput);
+    editForm.appendChild(document.createElement('br'));
+    editForm.appendChild(document.createElement('br'));
     const editNoteTextarea = document.createElement('textarea');
-        editNoteTextarea.value = formattedText;
-        editNoteTextarea.id = 'editNote';
-        editNoteTextarea.classList.add('editable-field');
-        editNoteTextarea.textContent = formattedText;
-        editForm.appendChild(editNoteTextarea);
-        editForm.appendChild(document.createElement('br'));
-        editForm.appendChild(document.createElement('br'));
+    editNoteTextarea.value = note.text;
+    editNoteTextarea.id = 'editNote';
+    editNoteTextarea.classList.add('editable-field');
+    editNoteTextarea.textContent = note.text;
+    editForm.appendChild(editNoteTextarea);
+    editForm.appendChild(document.createElement('br'));
+    editForm.appendChild(document.createElement('br'));
     const saveEditButton = document.createElement('button');
-        saveEditButton.type = 'button';
-        saveEditButton.id = 'saveEdit';
-        saveEditButton.textContent = 'Save Changes';
-        saveEditButton.addEventListener('click', function () {
-            saveEditedNote(note.number);
-        });
-        editForm.appendChild(saveEditButton);
+    saveEditButton.type = 'button';
+    saveEditButton.id = 'saveEdit';
+    saveEditButton.textContent = 'Save Changes';
+    saveEditButton.addEventListener('click', function () {
+        saveEditedNote(note.number);
+    });
+    editForm.appendChild(saveEditButton);
     const backButton = document.createElement('button');
-        backButton.type = 'button';
-        backButton.id = 'back';
-        backButton.textContent = 'Back';
-        backButton.addEventListener('click', function () {
-            loadNotes();
-        });
-        editForm.appendChild(backButton);
+    backButton.type = 'button';
+    backButton.id = 'back';
+    backButton.textContent = 'Back';
+    backButton.addEventListener('click', function () {
+        loadNotes();
+    });
+    editForm.appendChild(backButton);
     noteContainer.appendChild(editForm);
     const editableField = document.getElementById('editNote');
     editableField.addEventListener('keydown', function (e) {
@@ -227,52 +203,56 @@ function editNote(note) {
 }
 
 function saveEditedNote(noteId) {
+    const storedNotes = localStorage.getItem('notes');
+    let Notes = JSON.parse(storedNotes);
+    const noteIndex = Notes.findIndex(item => item.number === parseInt(noteId));
     const editTitle = document.getElementById('editTitle').value;
     const editNote = document.getElementById('editNote').value;
-    const formattedText = JSON.stringify(editNote);
-    const index = Notes.findIndex(note => note.number === noteId);
-    if (index !== -1) {
-        Notes[index].title = editTitle;
-        Notes[index].text = formattedText;
-        Notes[index].lastModified = new Date();
+    if (noteIndex !== -1) {
+        Notes[noteIndex].title = editTitle;
+        Notes[noteIndex].text = editNote;
+        Notes[noteIndex].lastModified = new Date();
         localStorage.setItem('notes', JSON.stringify(Notes));
         loadNotes();
     }
 }
 
-//Template 1 click
-function noteClick(note) {
-    return function () {
-        navigateToItem(note);
-    }
-}
+
 
 //JSON load notes
 function loadNotes() {
     const noteContainer = document.getElementById('noteContainer')
     noteContainer.innerHTML = '';
     const storedNotes = localStorage.getItem('notes');
+    const fragment = document.createDocumentFragment();
     if (storedNotes) {
-        Notes = JSON.parse(storedNotes);
-    }
-
-    for (const key in Notes) {
-        if (Notes.hasOwnProperty(key)) {
-            const note = Notes[key];
-            const template1 = createTemplate1(note);
-            template1.addEventListener('click', noteClick(note));
-            noteContainer.prepend(template1);
+        let Notes = JSON.parse(storedNotes);
+        for (const key in Notes) {
+            if (Notes.hasOwnProperty(key)) {
+                const note = Notes[key];
+                const template1 = createTemplate1(note);
+                fragment.prepend(template1);
+            }
         }
-    }
+    };
+    noteContainer.append(fragment);
+    noteContainer.addEventListener('click', event => {
+        const clickedElement = event.target;
+        const note = clickedElement.closest('article');
+        if (note) {
+            loadOneNote(note.id)
+        }
+    })
 }
+
 
 //Initialize App
 function initializeApp() {
     const storedNotes = localStorage.getItem('notes');
     if (storedNotes) {
-        Notes = JSON.parse(storedNotes);
+
     } else {
-        Notes = [{
+        let Notes = [{
             "number": 0,
             "created": currentDate,
             "lastModified": currentDate,
@@ -281,7 +261,6 @@ function initializeApp() {
         }];
         localStorage.setItem('notes', JSON.stringify(Notes));
     }
-    console.log(Notes.length);
     loadNotes();
 }
 
